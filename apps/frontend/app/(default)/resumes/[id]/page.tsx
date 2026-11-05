@@ -31,6 +31,7 @@ import {
   Chats,
   Copy,
 } from '@phosphor-icons/react';
+import { ManageResumesDialog } from '@/components/resume/manage-resumes-dialog';
 import { EnrichmentModal } from '@/components/enrichment/enrichment-modal';
 import { AgentPromptDialog } from '@/components/agent/agent-prompt-dialog';
 import { useTranslations } from '@/lib/i18n';
@@ -79,6 +80,7 @@ export default function ResumeViewerPage() {
   const [renameError, setRenameError] = useState<string | null>(null);
   const [setDefaultError, setSetDefaultError] = useState<string | null>(null);
   const [showEnrichmentModal, setShowEnrichmentModal] = useState(false);
+  const [manageOpen, setManageOpen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [resumeTitle, setResumeTitle] = useState<string | null>(null);
@@ -115,6 +117,7 @@ export default function ResumeViewerPage() {
   useEffect(() => {
     if (!resumeId) return;
     setShowEnrichmentModal(false);
+    setManageOpen(false);
     setIsRetrying(false);
     setIsDownloading(false);
     renameBusyRef.current = false;
@@ -595,6 +598,9 @@ export default function ResumeViewerPage() {
         </div>
 
         <PageHeader.Actions>
+          <Button type="button" variant="outline" onClick={() => setManageOpen(true)}>
+            {t('resumeManager.manage')}
+          </Button>
           {isMasterResume && (
             <Button type="button" onClick={() => setShowEnrichmentModal(true)}>
               {t('resumeViewer.enhanceResume')}
@@ -625,6 +631,12 @@ export default function ResumeViewerPage() {
           </Button>
         </PageHeader.Actions>
       </PageHeader>
+
+      <ManageResumesDialog
+        open={manageOpen}
+        onOpenChange={setManageOpen}
+        currentResumeId={resumeId}
+      />
 
       <div className="px-8 py-6 md:px-12 md:py-8">
         {/* Resume Viewer */}

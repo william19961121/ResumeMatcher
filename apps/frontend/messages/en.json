@@ -1618,5 +1618,18 @@
       "title": "Improve the writing",
       "prompt": "Use Resume Matcher to improve the writing of resume {resumeId}: run two writing rounds (critique every line against the rubric, rewrite the weak ones keeping every fact, verify), then save."
     }
+  },
+  "resumeManager": {
+    "manage": "Manage",
+    "title": "Manage resumes",
+    "description": "Choose a resume to view. Visibility changes only affect this list.",
+    "showHidden": "Show hidden resumes",
+    "storageFailed": "Your choice could not be saved. It may reset after refreshing.",
+    "loadFailed": "Unable to load resumes. Please try again.",
+    "empty": "No resumes available.",
+    "allHidden": "All resumes are hidden. Turn on “Show hidden resumes” to restore them.",
+    "current": "Currently viewing",
+    "visibleLabel": "Show {title}",
+    "visibilityHint": "Hide from this list only; the resume is kept."
   }
 }

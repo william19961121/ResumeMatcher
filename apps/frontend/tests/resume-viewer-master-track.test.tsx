@@ -22,6 +22,7 @@ vi.mock('@/components/dashboard/resume-component', () => ({ default: () => null 
 vi.mock('@/components/preview', () => ({ PaginatedPreview: () => null }));
 vi.mock('@/lib/api/resume', () => ({
   fetchResume: vi.fn(),
+  fetchResumeList: vi.fn(async () => []),
   deleteResume: vi.fn(),
   retryProcessing: vi.fn(),
   renameResume: vi.fn(),
@@ -48,6 +49,14 @@ beforeEach(() => {
 });
 
 describe('resume viewer master tracks', () => {
+  it('opens the manager from the detail page, including a tailored resume', async () => {
+    mockResume({ title: 'Tailored CV', is_master: false, parent_id: 'master' });
+    render(<ResumeViewerPage />);
+    fireEvent.click(await screen.findByRole('button', { name: 'resumeManager.manage' }));
+    expect(await screen.findByRole('dialog', { name: 'resumeManager.title' })).toBeVisible();
+    expect(await screen.findByText('resumeManager.empty')).toBeVisible();
+  });
+
   it('shows rename for a master and set-default for a non-default master', async () => {
     mockResume({ title: 'SWE track', is_master: true, is_default_master: false });
     mockedSetDefault.mockResolvedValue({ resume_id: 'r1', is_default_master: true });
