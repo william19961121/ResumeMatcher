@@ -1618,5 +1618,18 @@
       "title": "改进文字",
       "prompt": "用 Resume Matcher 改进简历 {resumeId} 的文字：进行两轮文字修改（按评分标准评审每一行，在保留所有事实的前提下改写薄弱的行，然后核对），再保存。"
     }
+  },
+  "resumeManager": {
+    "manage": "管理",
+    "title": "管理简历",
+    "description": "选择一份简历查看。显示设置仅影响此列表。",
+    "showHidden": "显示已隐藏简历",
+    "storageFailed": "选择未能保存，刷新后可能恢复。",
+    "loadFailed": "无法加载简历，请重试。",
+    "empty": "暂无简历。",
+    "allHidden": "全部简历已隐藏，请开启“显示已隐藏简历”以恢复。",
+    "current": "当前查看",
+    "visibleLabel": "显示 {title}",
+    "visibilityHint": "仅控制此列表的显示，简历数据会保留。"
   }
 }

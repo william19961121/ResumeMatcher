@@ -1618,5 +1618,18 @@
       "title": "Melhorar a escrita",
       "prompt": "Use o Resume Matcher para melhorar a escrita do currículo {resumeId}: faça duas rodadas de escrita (avalie cada linha pela rubrica, reescreva as fracas mantendo cada fato, verifique) e salve."
     }
+  },
+  "resumeManager": {
+    "manage": "Gerenciar",
+    "title": "Gerenciar currículos",
+    "description": "Escolha um currículo. A visibilidade afeta apenas esta lista.",
+    "showHidden": "Mostrar currículos ocultos",
+    "storageFailed": "Não foi possível salvar sua escolha. Ela pode ser redefinida ao atualizar.",
+    "loadFailed": "Não foi possível carregar os currículos. Tente novamente.",
+    "empty": "Nenhum currículo disponível.",
+    "allHidden": "Todos estão ocultos. Ative a exibição dos currículos ocultos para restaurá-los.",
+    "current": "Visualização atual",
+    "visibleLabel": "Mostrar {title}",
+    "visibilityHint": "Oculta apenas nesta lista; o currículo é mantido."
   }
 }

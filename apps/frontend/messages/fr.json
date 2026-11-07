@@ -1618,5 +1618,18 @@
       "title": "Améliorer la rédaction",
       "prompt": "Utilise Resume Matcher pour améliorer la rédaction du CV {resumeId} : fais deux tours de rédaction (relis chaque ligne selon la grille, réécris les plus faibles en gardant chaque fait, vérifie), puis enregistre."
     }
+  },
+  "resumeManager": {
+    "manage": "Gérer",
+    "title": "Gérer les CV",
+    "description": "Choisissez un CV. La visibilité concerne uniquement cette liste.",
+    "showHidden": "Afficher les CV masqués",
+    "storageFailed": "Impossible de sauvegarder votre choix. Il peut être réinitialisé après actualisation.",
+    "loadFailed": "Impossible de charger les CV. Réessayez.",
+    "empty": "Aucun CV disponible.",
+    "allHidden": "Tous les CV sont masqués. Activez leur affichage pour les restaurer.",
+    "current": "CV affiché",
+    "visibleLabel": "Afficher {title}",
+    "visibilityHint": "Masqué uniquement dans cette liste ; le CV est conservé."
   }
 }
