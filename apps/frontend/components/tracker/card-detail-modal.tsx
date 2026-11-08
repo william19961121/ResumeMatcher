@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert } from '@/components/ui/alert';
 import { StatusIndicator } from '@/components/ui/status-indicator';
@@ -21,6 +22,7 @@ import { useTranslations } from '@/lib/i18n';
 import { formatDate } from '@/lib/format-date';
 import {
   addInterviewQuestion,
+  removeInterviewQuestion,
   getApplicationDetail,
   updateApplication,
   type ApplicationDetail,
@@ -37,20 +39,35 @@ function InterviewQuestionForm({
   const [questions, setQuestions] = useState(detail.interview_questions ?? []);
   const [draft, setDraft] = useState('');
   const [saving, setSaving] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const save = async () => {
     const question = draft.trim();
     if (!question || saving) return;
     setSaving(true);
-    setFailed(false);
+    setError(null);
     try {
       const updated = await addInterviewQuestion(detail.application_id, question);
       setQuestions(updated.interview_questions ?? []);
       setDraft('');
       onUpdated();
     } catch {
-      setFailed(true);
+      setError(t('tracker.questions.saveFailed'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const remove = async (index: number, question: string) => {
+    if (saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const updated = await removeInterviewQuestion(detail.application_id, index, question);
+      setQuestions(updated.interview_questions ?? []);
+      onUpdated();
+    } catch {
+      setError(t('tracker.questions.deleteFailed'));
     } finally {
       setSaving(false);
     }
@@ -62,7 +79,16 @@ function InterviewQuestionForm({
       <ol className="list-decimal space-y-1 pl-6 text-sm">
         {questions.map((question, index) => (
           <li key={index} className="whitespace-pre-wrap break-words">
-            {question}
+            <span>{question}</span>{' '}
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={saving}
+              onClick={() => remove(index, question)}
+            >
+              {t('common.delete')} #{index + 1}
+            </Button>
           </li>
         ))}
       </ol>
@@ -76,7 +102,7 @@ function InterviewQuestionForm({
         }}
         disabled={saving}
       />
-      {failed && <Alert tone="error">{t('tracker.questions.saveFailed')}</Alert>}
+      {error && <Alert tone="error">{error}</Alert>}
       <Button
         type="button"
         size="sm"
@@ -97,6 +123,14 @@ interface CardDetailModalProps {
   onUpdated: () => void;
 }
 
+function toLocalDateTimeInput(value: string | null): string {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const pad = (part: number) => String(part).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 export function CardDetailModal({
   applicationId,
   open,
@@ -110,6 +144,9 @@ export function CardDetailModal({
   const [notes, setNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
   const [notesError, setNotesError] = useState<string | null>(null);
+  const [interviewTime, setInterviewTime] = useState('');
+  const [savingInterviewTime, setSavingInterviewTime] = useState(false);
+  const [interviewTimeError, setInterviewTimeError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open || !applicationId) {
@@ -123,7 +160,9 @@ export function CardDetailModal({
         if (cancelled) return;
         setDetail(data);
         setNotes(data.notes ?? '');
+        setInterviewTime(toLocalDateTimeInput(data.interview_at));
         setNotesError(null);
+        setInterviewTimeError(null);
       })
       .catch(() => {
         if (!cancelled) setDetail(null);
@@ -154,6 +193,30 @@ export function CardDetailModal({
       setNotesError(t('common.error'));
     } finally {
       setSavingNotes(false);
+    }
+  };
+
+  const handleSaveInterviewTime = async () => {
+    if (!applicationId) return;
+    const date = interviewTime ? new Date(interviewTime) : null;
+    if (date && Number.isNaN(date.getTime())) {
+      setInterviewTimeError(t('tracker.modal.invalidInterviewTime'));
+      return;
+    }
+    setSavingInterviewTime(true);
+    setInterviewTimeError(null);
+    try {
+      const updated = await updateApplication(applicationId, {
+        interview_at: date ? date.toISOString() : null,
+      });
+      setDetail((current) =>
+        current ? { ...current, interview_at: updated.interview_at } : current
+      );
+      onUpdated();
+    } catch {
+      setInterviewTimeError(t('common.error'));
+    } finally {
+      setSavingInterviewTime(false);
     }
   };
 
@@ -192,6 +255,33 @@ export function CardDetailModal({
                   {detail.job_content || t('tracker.modal.noJobDescription')}
                 </div>
               </div>
+
+              {detail.status === 'interview' && (
+                <div className="space-y-1">
+                  <Label htmlFor="card-interview-time">{t('tracker.modal.interviewTime')}</Label>
+                  <Input
+                    id="card-interview-time"
+                    type="datetime-local"
+                    value={interviewTime}
+                    onChange={(event) => setInterviewTime(event.target.value)}
+                    aria-invalid={Boolean(interviewTimeError)}
+                  />
+                  {interviewTimeError && <Alert tone="error">{interviewTimeError}</Alert>}
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={handleSaveInterviewTime}
+                      disabled={savingInterviewTime}
+                    >
+                      {savingInterviewTime
+                        ? t('common.saving')
+                        : t('tracker.modal.saveInterviewTime')}
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-1">
                 <Label htmlFor="card-notes">{t('tracker.modal.notes')}</Label>

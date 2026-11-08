@@ -29,6 +29,7 @@ export interface Application {
   company: string | null;
   role: string | null;
   applied_at: string | null;
+  interview_at: string | null;
   notes: string | null;
   interview_questions?: string[];
   position: number;
@@ -64,6 +65,7 @@ export interface ApplicationUpdate {
   company?: string;
   role?: string;
   applied_at?: string;
+  interview_at?: string | null;
 }
 
 export interface ApplicationActionResponse {
@@ -129,6 +131,22 @@ export async function addInterviewQuestion(id: string, question: string): Promis
     question,
   });
   return asJson<Application>(res, 'Failed to add interview question');
+}
+
+export async function removeInterviewQuestion(
+  id: string,
+  index: number,
+  question: string
+): Promise<Application> {
+  const res = await apiFetch(
+    `/applications/${encodeURIComponent(id)}/interview-questions/${index}`,
+    {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question }),
+    }
+  );
+  return asJson<Application>(res, 'Failed to remove interview question');
 }
 
 // Update one card (status/position/notes/company/role/applied_at).

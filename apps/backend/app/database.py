@@ -296,6 +296,7 @@ class Database:
             "company": row.company,
             "role": row.role,
             "applied_at": row.applied_at,
+            "interview_at": row.interview_at,
             "notes": row.notes,
             "interview_questions": row.interview_questions or [],
             "position": row.position,
@@ -1345,8 +1346,14 @@ class Database:
             new_status = updates.get("status", old_status)
             target_position = updates.get("position", None)
 
-            for key in ("company", "role", "applied_at", "notes"):
+            for key in ("company", "role", "applied_at", "interview_at", "notes"):
                 if key in updates:
+                    if (
+                        key == "interview_at"
+                        and updates[key] is not None
+                        and new_status != "interview"
+                    ):
+                        raise ValueError("Interview time requires interview status")
                     setattr(row, key, updates[key])
 
             if (
@@ -1395,6 +1402,21 @@ class Database:
             if row is None:
                 return None
             row.interview_questions = [*(row.interview_questions or []), question]
+            row.updated_at = _now()
+            await session.commit()
+            return self._application_to_dict(row)
+
+    async def remove_interview_question(
+        self, application_id: str, index: int, question: str
+    ) -> dict[str, Any] | None:
+        async with self._write_session() as session:
+            row = await session.get(Application, application_id)
+            if row is None:
+                return None
+            questions = row.interview_questions or []
+            if not 0 <= index < len(questions) or questions[index] != question:
+                raise ValueError("Interview question has changed")
+            row.interview_questions = questions[:index] + questions[index + 1 :]
             row.updated_at = _now()
             await session.commit()
             return self._application_to_dict(row)

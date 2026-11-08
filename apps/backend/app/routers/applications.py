@@ -149,7 +149,7 @@ async def bulk_update_applications(
 async def update_application(
     application_id: str, request: ApplicationUpdate
 ) -> ApplicationResponse:
-    """Update a card (status/position/notes/company/role/applied_at)."""
+    """Update a card, including its interview time when in the interview stage."""
     updates = request.model_dump(exclude_unset=True)
     # Normalize the enum to its stable string value for the data layer.
     if "status" in updates and updates["status"] is not None:
@@ -158,6 +158,8 @@ async def update_application(
         updated = await db.update_application(application_id, updates)
     except DatabaseBusyError:
         raise
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
     except Exception as e:
         logger.error("Failed to update application %s: %s", application_id, e)
         raise HTTPException(
@@ -183,6 +185,35 @@ async def add_interview_question(
             "Failed to add an interview question to application %s", application_id
         )
         raise HTTPException(status_code=500, detail="Failed to add interview question.")
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+    return ApplicationResponse(**updated)
+
+
+@router.delete(
+    "/{application_id}/interview-questions/{index}", response_model=ApplicationResponse
+)
+async def remove_interview_question(
+    application_id: str, index: int, request: InterviewQuestionCreate
+) -> ApplicationResponse:
+    try:
+        updated = await db.remove_interview_question(
+            application_id, index, request.question
+        )
+    except ValueError:
+        raise HTTPException(
+            status_code=409,
+            detail="Interview question has changed. Reload the application.",
+        )
+    except DatabaseBusyError:
+        raise
+    except Exception:
+        logger.exception(
+            "Failed to remove an interview question from application %s", application_id
+        )
+        raise HTTPException(
+            status_code=500, detail="Failed to remove interview question."
+        )
     if updated is None:
         raise HTTPException(status_code=404, detail="Application not found")
     return ApplicationResponse(**updated)

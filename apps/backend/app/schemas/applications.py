@@ -1,5 +1,6 @@
 """Pydantic schemas for the Kanban application tracker."""
 
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
@@ -34,6 +35,7 @@ class ApplicationResponse(BaseModel):
     company: str | None = None
     role: str | None = None
     applied_at: str | None = None
+    interview_at: str | None = None
     notes: str | None = None
     interview_questions: list[str] = Field(default_factory=list)
     position: int
@@ -83,6 +85,22 @@ class ApplicationUpdate(BaseModel):
     company: str | None = None
     role: str | None = None
     applied_at: str | None = None
+    interview_at: str | None = None
+
+    @field_validator("interview_at")
+    @classmethod
+    def validate_interview_at(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise ValueError(
+                "Interview time must be an ISO 8601 date and time"
+            ) from exc
+        if parsed.tzinfo is None or parsed.utcoffset() is None:
+            raise ValueError("Interview time must include a timezone")
+        return parsed.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
     @field_validator("status")
     @classmethod

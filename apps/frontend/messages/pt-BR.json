@@ -1429,7 +1429,8 @@
       "title": "Perguntas de entrevista",
       "add": "Adicionar pergunta",
       "empty": "Nenhuma pergunta registrada.",
-      "saveFailed": "Não foi possível salvar a pergunta. Tente novamente."
+      "saveFailed": "Não foi possível salvar a pergunta. Tente novamente.",
+      "deleteFailed": "Não foi possível excluir a pergunta. Reabra a candidatura e tente novamente."
     },
     "manage": "Gerenciar",
     "manageDialog": {
@@ -1466,6 +1467,7 @@
       "companyUnknown": "Empresa desconhecida",
       "roleUnknown": "Cargo sem título",
       "sharedResume": "Currículo compartilhado",
+      "interviewTime": "Entrevista",
       "selectAria": "Selecionar candidatura",
       "dragAria": "Arraste para reordenar"
     },
@@ -1475,6 +1477,9 @@
       "notes": "Notas",
       "notesPlaceholder": "Adicione notas sobre esta candidatura…",
       "saveNotes": "Salvar notas",
+      "interviewTime": "Data e hora da entrevista",
+      "saveInterviewTime": "Salvar horário da entrevista",
+      "invalidInterviewTime": "Informe uma data e hora válidas.",
       "resumeUnavailable": "O currículo enviado não está mais disponível.",
       "loadFailed": "Não foi possível carregar esta candidatura.",
       "editResume": "Editar currículo"

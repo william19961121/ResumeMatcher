@@ -1,9 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { CardDetailModal } from '@/components/tracker/card-detail-modal';
 import { ManualAddApplicationDialog } from '@/components/tracker/manual-add-application-dialog';
 import {
   addInterviewQuestion,
+  removeInterviewQuestion,
   createApplication,
   getApplicationDetail,
   updateApplication,
@@ -19,6 +20,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('@/lib/api/tracker', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/api/tracker')>()),
   addInterviewQuestion: vi.fn(),
+  removeInterviewQuestion: vi.fn(),
   getApplicationDetail: vi.fn(),
   createApplication: vi.fn(),
   updateApplication: vi.fn(),
@@ -45,6 +47,7 @@ const detail: ApplicationDetail = {
   company: 'ACME',
   role: 'Engineer',
   applied_at: '2026-03-15T00:00:00Z',
+  interview_at: null,
   notes: null,
   position: 0,
   created_at: '2026-01-01T00:00:00Z',
@@ -109,6 +112,36 @@ describe('ManualAddApplicationDialog feedback', () => {
 });
 
 describe('CardDetailModal', () => {
+  it('saves a local interview date and time through the application API', async () => {
+    vi.mocked(getApplicationDetail).mockResolvedValue(detail);
+    vi.mocked(updateApplication).mockResolvedValue({
+      ...detail,
+      interview_at: new Date('2026-11-10T09:30').toISOString(),
+    });
+    const onUpdated = vi.fn();
+    render(
+      <CardDetailModal applicationId="a1" open onOpenChange={vi.fn()} onUpdated={onUpdated} />
+    );
+
+    const input = await screen.findByLabelText('tracker.modal.interviewTime');
+    fireEvent.change(input, { target: { value: '2026-11-10T09:30' } });
+    fireEvent.click(screen.getByRole('button', { name: 'tracker.modal.saveInterviewTime' }));
+
+    await waitFor(() => {
+      expect(updateApplication).toHaveBeenCalledWith('a1', {
+        interview_at: new Date('2026-11-10T09:30').toISOString(),
+      });
+      expect(onUpdated).toHaveBeenCalled();
+    });
+  });
+
+  it('does not show interview time editing for other stages', async () => {
+    vi.mocked(getApplicationDetail).mockResolvedValue({ ...detail, status: 'applied' });
+    render(<CardDetailModal applicationId="a1" open onOpenChange={vi.fn()} onUpdated={vi.fn()} />);
+    await screen.findByRole('button', { name: 'tracker.modal.saveNotes' });
+    expect(screen.queryByLabelText('tracker.modal.interviewTime')).not.toBeInTheDocument();
+  });
+
   it('announces loading instead of showing a silent spinner', () => {
     vi.mocked(getApplicationDetail).mockReturnValue(new Promise(() => {}));
     render(<CardDetailModal applicationId="a1" open onOpenChange={vi.fn()} onUpdated={vi.fn()} />);
@@ -124,6 +157,26 @@ describe('CardDetailModal', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'tracker.modal.saveNotes' }));
 
     expect(await screen.findByRole('button', { name: 'common.saving' })).toBeDisabled();
+  });
+
+  it('deletes the selected interview question and refreshes the board', async () => {
+    const onUpdated = vi.fn();
+    vi.mocked(getApplicationDetail).mockResolvedValue({
+      ...detail,
+      interview_questions: ['First question', 'Second question'],
+    });
+    vi.mocked(removeInterviewQuestion).mockResolvedValue({
+      ...detail,
+      interview_questions: ['Second question'],
+    });
+    render(
+      <CardDetailModal applicationId="a1" open onOpenChange={vi.fn()} onUpdated={onUpdated} />
+    );
+    fireEvent.click(await screen.findByRole('button', { name: 'common.delete #1' }));
+    await waitFor(() => expect(screen.queryByText('First question')).toBeNull());
+    expect(screen.getByText('Second question')).toBeVisible();
+    expect(removeInterviewQuestion).toHaveBeenCalledWith('a1', 0, 'First question');
+    expect(onUpdated).toHaveBeenCalledOnce();
   });
 
   it('retains a failed question draft and appends it on retry', async () => {
