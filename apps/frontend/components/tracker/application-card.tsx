@@ -74,6 +74,18 @@ export function ApplicationCard({
                 {formatDate(application.applied_at, locale)}
               </p>
             )}
+            {application.status === 'interview' && application.interview_at && (
+              <p className="mt-1 font-mono text-xs text-ink-soft tabular-nums">
+                {t('tracker.card.interviewTime')}:{' '}
+                {formatDate(application.interview_at, locale, {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
+            )}
             {sharedResume && (
               <span className="mt-1 inline-flex items-center gap-1 border border-ink bg-paper px-1 font-mono text-xs uppercase text-ink-soft">
                 <Stack aria-hidden="true" className="size-4" />

@@ -1460,6 +1460,7 @@
       "companyUnknown": "Entreprise inconnue",
       "roleUnknown": "Poste sans titre",
       "sharedResume": "CV partagé",
+      "interviewTime": "Entretien",
       "selectAria": "Sélectionner la candidature",
       "dragAria": "Faire glisser pour réorganiser"
     },
@@ -1469,6 +1470,9 @@
       "notes": "Notes",
       "notesPlaceholder": "Ajoutez des notes sur cette candidature…",
       "saveNotes": "Enregistrer les notes",
+      "interviewTime": "Date et heure de l'entretien",
+      "saveInterviewTime": "Enregistrer l'heure de l'entretien",
+      "invalidInterviewTime": "Saisissez une date et une heure valides.",
       "resumeUnavailable": "Le CV soumis n'est plus disponible.",
       "loadFailed": "Impossible de charger cette candidature.",
       "editResume": "Modifier le CV"

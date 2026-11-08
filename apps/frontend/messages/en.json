@@ -1460,6 +1460,7 @@
       "companyUnknown": "Unknown company",
       "roleUnknown": "Untitled role",
       "sharedResume": "Shared resume",
+      "interviewTime": "Interview",
       "selectAria": "Select application",
       "dragAria": "Drag to reorder"
     },
@@ -1469,6 +1470,9 @@
       "notes": "Notes",
       "notesPlaceholder": "Add notes about this application…",
       "saveNotes": "Save notes",
+      "interviewTime": "Interview date and time",
+      "saveInterviewTime": "Save interview time",
+      "invalidInterviewTime": "Enter a valid date and time.",
       "resumeUnavailable": "The applied resume is no longer available.",
       "loadFailed": "Could not load this application.",
       "editResume": "Edit resume"
