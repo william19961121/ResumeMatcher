@@ -117,6 +117,46 @@ class TestDetail:
 
 
 class TestUpdateAndMove:
+    async def test_interview_time_persists_in_detail_and_board(self, isolated_db):
+        card = await _seed_card(isolated_db, status="interview")
+        url = f"/api/v1/applications/{card['application_id']}"
+        async with _client() as client:
+            response = await client.patch(
+                url, json={"interview_at": "2026-11-10T09:30:00+08:00"}
+            )
+            assert response.status_code == 200
+            assert response.json()["interview_at"] == "2026-11-10T01:30:00Z"
+            detail = await client.get(url)
+            board = await client.get("/api/v1/applications")
+            assert detail.json()["interview_at"] == "2026-11-10T01:30:00Z"
+            assert (
+                board.json()["columns"]["interview"][0]["interview_at"]
+                == "2026-11-10T01:30:00Z"
+            )
+
+            moved = await client.patch(url, json={"status": "accepted"})
+            assert moved.status_code == 200
+            assert moved.json()["interview_at"] == "2026-11-10T01:30:00Z"
+            cleared = await client.patch(url, json={"interview_at": None})
+            assert cleared.status_code == 200
+            assert cleared.json()["interview_at"] is None
+
+    async def test_interview_time_requires_interview_status_and_timezone(
+        self, isolated_db
+    ):
+        card = await _seed_card(isolated_db, status="applied")
+        url = f"/api/v1/applications/{card['application_id']}"
+        async with _client() as client:
+            missing_timezone = await client.patch(
+                url, json={"status": "interview", "interview_at": "2026-11-10T09:30"}
+            )
+            assert missing_timezone.status_code == 422
+            wrong_status = await client.patch(
+                url, json={"interview_at": "2026-11-10T09:30:00Z"}
+            )
+            assert wrong_status.status_code == 422
+            assert (await client.get(url)).json()["interview_at"] is None
+
     async def test_patch_moves_card_across_columns(self, isolated_db):
         a = await _seed_card(isolated_db, job_id="j1", resume_id="r1", status="applied")
         b = await _seed_card(isolated_db, job_id="j2", resume_id="r2", status="applied")

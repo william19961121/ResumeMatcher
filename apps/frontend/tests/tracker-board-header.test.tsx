@@ -8,7 +8,9 @@ import {
   type ApplicationColumns,
 } from '@/lib/api/tracker';
 
-vi.mock('@/lib/i18n', () => ({ useTranslations: () => ({ t: (key: string) => key }) }));
+vi.mock('@/lib/i18n', () => ({
+  useTranslations: () => ({ t: (key: string) => key, locale: 'en' }),
+}));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 vi.mock('@/lib/api/tracker', async (importOriginal) => {
@@ -25,6 +27,31 @@ function columnsWith(cards: Application[]): ApplicationColumns {
 }
 
 describe('KanbanBoard header', () => {
+  it('shows the saved date and time on an interview card', async () => {
+    const interviewAt = '2026-11-10T01:30:00Z';
+    const card = {
+      application_id: 'a1',
+      status: 'interview',
+      company: 'Acme',
+      role: 'Engineer',
+      interview_at: interviewAt,
+    } as Application;
+    const columns = columnsWith([]);
+    columns.interview = [card];
+    vi.mocked(listApplications).mockResolvedValue({ columns });
+
+    render(<KanbanBoard />);
+
+    const expected = new Intl.DateTimeFormat('en', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(interviewAt));
+    expect(await screen.findByText(`tracker.card.interviewTime: ${expected}`)).toBeInTheDocument();
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });
