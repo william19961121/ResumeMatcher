@@ -1425,6 +1425,12 @@
     }
   },
   "tracker": {
+    "questions": {
+      "title": "面试题",
+      "add": "添加面试题",
+      "empty": "还没有记录面试题。",
+      "saveFailed": "面试题保存失败，请重试。"
+    },
     "manage": "管理",
     "manageDialog": {
       "title": "管理看板列",

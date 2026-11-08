@@ -35,6 +35,7 @@ class ApplicationResponse(BaseModel):
     role: str | None = None
     applied_at: str | None = None
     notes: str | None = None
+    interview_questions: list[str] = Field(default_factory=list)
     position: int
     created_at: str
     updated_at: str
@@ -90,6 +91,18 @@ class ApplicationUpdate(BaseModel):
         if value is None:
             raise ValueError("Status cannot be null")
         return value
+
+
+class InterviewQuestionCreate(BaseModel):
+    question: str
+
+    @field_validator("question")
+    @classmethod
+    def trim_question(cls, value: str) -> str:
+        question = value.strip()
+        if not question:
+            raise ValueError("Question cannot be blank")
+        return question
 
 
 class BulkStatusUpdate(BaseModel):

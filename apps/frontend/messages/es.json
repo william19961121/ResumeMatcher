@@ -1425,6 +1425,12 @@
     }
   },
   "tracker": {
+    "questions": {
+      "title": "Preguntas de entrevista",
+      "add": "Añadir pregunta",
+      "empty": "Aún no hay preguntas registradas.",
+      "saveFailed": "No se pudo guardar la pregunta. Inténtalo de nuevo."
+    },
     "manage": "Gestionar",
     "manageDialog": {
       "title": "Gestionar columnas",

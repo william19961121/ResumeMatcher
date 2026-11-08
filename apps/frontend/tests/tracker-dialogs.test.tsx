@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { CardDetailModal } from '@/components/tracker/card-detail-modal';
 import { ManualAddApplicationDialog } from '@/components/tracker/manual-add-application-dialog';
 import {
+  addInterviewQuestion,
   createApplication,
   getApplicationDetail,
   updateApplication,
@@ -17,6 +18,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 vi.mock('@/lib/api/tracker', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/api/tracker')>()),
+  addInterviewQuestion: vi.fn(),
   getApplicationDetail: vi.fn(),
   createApplication: vi.fn(),
   updateApplication: vi.fn(),
@@ -122,6 +124,29 @@ describe('CardDetailModal', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'tracker.modal.saveNotes' }));
 
     expect(await screen.findByRole('button', { name: 'common.saving' })).toBeDisabled();
+  });
+
+  it('retains a failed question draft and appends it on retry', async () => {
+    const onUpdated = vi.fn();
+    vi.mocked(getApplicationDetail).mockResolvedValue(detail);
+    vi.mocked(addInterviewQuestion)
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce({ ...detail, interview_questions: ['Explain indexes.'] });
+    render(
+      <CardDetailModal applicationId="a1" open onOpenChange={vi.fn()} onUpdated={onUpdated} />
+    );
+
+    const field = await screen.findByRole('textbox', { name: 'tracker.questions.title' });
+    fireEvent.change(field, { target: { value: '  Explain indexes.  ' } });
+    const add = screen.getByRole('button', { name: 'tracker.questions.add' });
+    fireEvent.click(add);
+    expect(await screen.findByText('tracker.questions.saveFailed')).toBeVisible();
+    expect(field).toHaveValue('  Explain indexes.  ');
+    fireEvent.click(add);
+    expect(await screen.findByText('Explain indexes.')).toBeVisible();
+    expect(addInterviewQuestion).toHaveBeenLastCalledWith('a1', 'Explain indexes.');
+    expect(field).toHaveValue('');
+    expect(onUpdated).toHaveBeenCalledOnce();
   });
 
   it('shows the stage, a UI-locale date and a missing-resume warning', async () => {

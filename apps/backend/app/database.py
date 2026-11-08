@@ -297,6 +297,7 @@ class Database:
             "role": row.role,
             "applied_at": row.applied_at,
             "notes": row.notes,
+            "interview_questions": row.interview_questions or [],
             "position": row.position,
             "created_at": row.created_at,
             "updated_at": row.updated_at,
@@ -1382,6 +1383,18 @@ class Database:
                 for index, item in enumerate(ordered):
                     item.position = index
 
+            row.updated_at = _now()
+            await session.commit()
+            return self._application_to_dict(row)
+
+    async def add_interview_question(
+        self, application_id: str, question: str
+    ) -> dict[str, Any] | None:
+        async with self._write_session() as session:
+            row = await session.get(Application, application_id)
+            if row is None:
+                return None
+            row.interview_questions = [*(row.interview_questions or []), question]
             row.updated_at = _now()
             await session.commit()
             return self._application_to_dict(row)

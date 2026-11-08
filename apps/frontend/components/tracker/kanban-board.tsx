@@ -33,6 +33,7 @@ import { BulkActionBar } from './bulk-action-bar';
 import { CardDetailModal } from './card-detail-modal';
 import { ManualAddApplicationDialog } from './manual-add-application-dialog';
 import { planMove } from './reorder';
+import { InterviewQuestionsDialog } from './interview-questions-dialog';
 import { ManageColumnsDialog } from './manage-columns-dialog';
 import {
   readHiddenStatuses,
@@ -61,6 +62,7 @@ export function KanbanBoard() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [openCardId, setOpenCardId] = useState<string | null>(null);
   const [manualAddOpen, setManualAddOpen] = useState(false);
+  const [questionsOpen, setQuestionsOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
   const [hiddenStatuses, setHiddenStatuses] = useState<Set<ApplicationStatus>>(() =>
     readHiddenStatuses()
@@ -241,6 +243,9 @@ export function KanbanBoard() {
             <Gear aria-hidden="true" />
             {t('tracker.manage')}
           </Button>
+          <Button type="button" variant="outline" size="sm" onClick={() => setQuestionsOpen(true)}>
+            {t('tracker.questions.title')}
+          </Button>
           {showScrollControls && (
             <div className="flex items-center gap-3">
               <Button
@@ -372,6 +377,12 @@ export function KanbanBoard() {
         open={manualAddOpen}
         onOpenChange={setManualAddOpen}
         onCreated={load}
+      />
+
+      <InterviewQuestionsDialog
+        open={questionsOpen}
+        onOpenChange={setQuestionsOpen}
+        applications={allCards}
       />
 
       <ManageColumnsDialog

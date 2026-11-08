@@ -1425,6 +1425,12 @@
     }
   },
   "tracker": {
+    "questions": {
+      "title": "면접 질문",
+      "add": "질문 추가",
+      "empty": "기록된 면접 질문이 없습니다.",
+      "saveFailed": "질문을 저장하지 못했습니다. 다시 시도하세요."
+    },
     "manage": "관리",
     "manageDialog": {
       "title": "열 관리",

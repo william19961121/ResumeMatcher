@@ -17,6 +17,7 @@ from app.schemas import (
     BulkStatusUpdate,
     ManualApplicationCreate,
 )
+from app.schemas.applications import InterviewQuestionCreate
 from app.services.improver import extract_job_keywords
 
 logger = logging.getLogger(__name__)
@@ -162,6 +163,26 @@ async def update_application(
         raise HTTPException(
             status_code=500, detail="Failed to update application. Please try again."
         )
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+    return ApplicationResponse(**updated)
+
+
+@router.post(
+    "/{application_id}/interview-questions", response_model=ApplicationResponse
+)
+async def add_interview_question(
+    application_id: str, request: InterviewQuestionCreate
+) -> ApplicationResponse:
+    try:
+        updated = await db.add_interview_question(application_id, request.question)
+    except DatabaseBusyError:
+        raise
+    except Exception:
+        logger.exception(
+            "Failed to add an interview question to application %s", application_id
+        )
+        raise HTTPException(status_code=500, detail="Failed to add interview question.")
     if updated is None:
         raise HTTPException(status_code=404, detail="Application not found")
     return ApplicationResponse(**updated)

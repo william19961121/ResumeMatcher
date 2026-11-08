@@ -1425,6 +1425,12 @@
     }
   },
   "tracker": {
+    "questions": {
+      "title": "Questions d’entretien",
+      "add": "Ajouter une question",
+      "empty": "Aucune question enregistrée.",
+      "saveFailed": "Impossible d’enregistrer la question. Réessayez."
+    },
     "manage": "Gérer",
     "manageDialog": {
       "title": "Gérer les colonnes",

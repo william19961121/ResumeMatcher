@@ -19,7 +19,76 @@ import { Alert } from '@/components/ui/alert';
 import { StatusIndicator } from '@/components/ui/status-indicator';
 import { useTranslations } from '@/lib/i18n';
 import { formatDate } from '@/lib/format-date';
-import { getApplicationDetail, updateApplication, type ApplicationDetail } from '@/lib/api/tracker';
+import {
+  addInterviewQuestion,
+  getApplicationDetail,
+  updateApplication,
+  type ApplicationDetail,
+} from '@/lib/api/tracker';
+
+function InterviewQuestionForm({
+  detail,
+  onUpdated,
+}: {
+  detail: ApplicationDetail;
+  onUpdated: () => void;
+}) {
+  const { t } = useTranslations();
+  const [questions, setQuestions] = useState(detail.interview_questions ?? []);
+  const [draft, setDraft] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  const save = async () => {
+    const question = draft.trim();
+    if (!question || saving) return;
+    setSaving(true);
+    setFailed(false);
+    try {
+      const updated = await addInterviewQuestion(detail.application_id, question);
+      setQuestions(updated.interview_questions ?? []);
+      setDraft('');
+      onUpdated();
+    } catch {
+      setFailed(true);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="interview-question">{t('tracker.questions.title')}</Label>
+      <ol className="list-decimal space-y-1 pl-6 text-sm">
+        {questions.map((question, index) => (
+          <li key={index} className="whitespace-pre-wrap break-words">
+            {question}
+          </li>
+        ))}
+      </ol>
+      <Textarea
+        id="interview-question"
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        rows={3}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') event.stopPropagation();
+        }}
+        disabled={saving}
+      />
+      {failed && <Alert tone="error">{t('tracker.questions.saveFailed')}</Alert>}
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        onClick={save}
+        disabled={saving || !draft.trim()}
+      >
+        {t(saving ? 'common.saving' : 'tracker.questions.add')}
+      </Button>
+    </div>
+  );
+}
 
 interface CardDetailModalProps {
   applicationId: string | null;
@@ -154,6 +223,14 @@ export function CardDetailModal({
                   </Button>
                 </div>
               </div>
+
+              {open && detail.application_id === applicationId && (
+                <InterviewQuestionForm
+                  key={detail.application_id}
+                  detail={detail}
+                  onUpdated={onUpdated}
+                />
+              )}
 
               {!resumeAvailable && (
                 <Alert tone="warning">{t('tracker.modal.resumeUnavailable')}</Alert>
