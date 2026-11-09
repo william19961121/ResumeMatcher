@@ -334,20 +334,25 @@ async def test_delete_question_preserves_interview_time_and_other_questions(
         assert (
             await client.patch(url, json={"interview_at": interview_at})
         ).status_code == 200
-        for question in ("First question", "Second question"):
+        questions = ["First question", "First question", "Second question"]
+        for question in questions:
             response = await client.post(
                 f"{url}/interview-questions", json={"question": question}
             )
             assert response.status_code == 200
         endpoint = f"{url}/interview-questions/0"
         stale = await client.request(
-            "DELETE", endpoint, json={"question": "Second question"}
+            "DELETE", endpoint, json={"expected_questions": ["Second question"]}
         )
         assert stale.status_code == 409
         removed = await client.request(
-            "DELETE", endpoint, json={"question": "First question"}
+            "DELETE", endpoint, json={"expected_questions": questions}
         )
         assert removed.status_code == 200
+        retried = await client.request(
+            "DELETE", endpoint, json={"expected_questions": questions}
+        )
+        assert retried.status_code == 409
         stored = (await client.get(url)).json()
-        assert stored["interview_questions"] == ["Second question"]
+        assert stored["interview_questions"] == ["First question", "Second question"]
         assert stored["interview_at"] == interview_at

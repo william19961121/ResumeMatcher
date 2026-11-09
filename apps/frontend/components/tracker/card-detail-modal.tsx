@@ -58,12 +58,12 @@ function InterviewQuestionForm({
     }
   };
 
-  const remove = async (index: number, question: string) => {
+  const remove = async (index: number) => {
     if (saving) return;
     setSaving(true);
     setError(null);
     try {
-      const updated = await removeInterviewQuestion(detail.application_id, index, question);
+      const updated = await removeInterviewQuestion(detail.application_id, index, questions);
       setQuestions(updated.interview_questions ?? []);
       onUpdated();
     } catch {
@@ -85,7 +85,7 @@ function InterviewQuestionForm({
               size="sm"
               variant="outline"
               disabled={saving}
-              onClick={() => remove(index, question)}
+              onClick={() => remove(index)}
             >
               {t('common.delete')} #{index + 1}
             </Button>

@@ -17,7 +17,7 @@ from app.schemas import (
     BulkStatusUpdate,
     ManualApplicationCreate,
 )
-from app.schemas.applications import InterviewQuestionCreate
+from app.schemas.applications import InterviewQuestionCreate, InterviewQuestionDelete
 from app.services.improver import extract_job_keywords
 
 logger = logging.getLogger(__name__)
@@ -194,11 +194,11 @@ async def add_interview_question(
     "/{application_id}/interview-questions/{index}", response_model=ApplicationResponse
 )
 async def remove_interview_question(
-    application_id: str, index: int, request: InterviewQuestionCreate
+    application_id: str, index: int, request: InterviewQuestionDelete
 ) -> ApplicationResponse:
     try:
         updated = await db.remove_interview_question(
-            application_id, index, request.question
+            application_id, index, request.expected_questions
         )
     except ValueError:
         raise HTTPException(

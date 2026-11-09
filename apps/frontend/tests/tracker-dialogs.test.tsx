@@ -175,7 +175,10 @@ describe('CardDetailModal', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'common.delete #1' }));
     await waitFor(() => expect(screen.queryByText('First question')).toBeNull());
     expect(screen.getByText('Second question')).toBeVisible();
-    expect(removeInterviewQuestion).toHaveBeenCalledWith('a1', 0, 'First question');
+    expect(removeInterviewQuestion).toHaveBeenCalledWith('a1', 0, [
+      'First question',
+      'Second question',
+    ]);
     expect(onUpdated).toHaveBeenCalledOnce();
   });
 

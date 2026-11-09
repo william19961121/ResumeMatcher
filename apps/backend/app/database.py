@@ -1407,14 +1407,14 @@ class Database:
             return self._application_to_dict(row)
 
     async def remove_interview_question(
-        self, application_id: str, index: int, question: str
+        self, application_id: str, index: int, expected_questions: list[str]
     ) -> dict[str, Any] | None:
         async with self._write_session() as session:
             row = await session.get(Application, application_id)
             if row is None:
                 return None
             questions = row.interview_questions or []
-            if not 0 <= index < len(questions) or questions[index] != question:
+            if questions != expected_questions or not 0 <= index < len(questions):
                 raise ValueError("Interview question has changed")
             row.interview_questions = questions[:index] + questions[index + 1 :]
             row.updated_at = _now()

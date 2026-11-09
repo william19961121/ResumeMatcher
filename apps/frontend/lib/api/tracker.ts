@@ -136,14 +136,14 @@ export async function addInterviewQuestion(id: string, question: string): Promis
 export async function removeInterviewQuestion(
   id: string,
   index: number,
-  question: string
+  expectedQuestions: string[]
 ): Promise<Application> {
   const res = await apiFetch(
     `/applications/${encodeURIComponent(id)}/interview-questions/${index}`,
     {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({ expected_questions: expectedQuestions }),
     }
   );
   return asJson<Application>(res, 'Failed to remove interview question');

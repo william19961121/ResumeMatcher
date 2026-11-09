@@ -123,6 +123,10 @@ class InterviewQuestionCreate(BaseModel):
         return question
 
 
+class InterviewQuestionDelete(BaseModel):
+    expected_questions: list[str]
+
+
 class BulkStatusUpdate(BaseModel):
     """Move many cards to one column."""
 
