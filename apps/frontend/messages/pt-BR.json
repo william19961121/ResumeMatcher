@@ -1425,6 +1425,13 @@
     }
   },
   "tracker": {
+    "questions": {
+      "title": "Perguntas de entrevista",
+      "add": "Adicionar pergunta",
+      "empty": "Nenhuma pergunta registrada.",
+      "saveFailed": "Não foi possível salvar a pergunta. Tente novamente.",
+      "deleteFailed": "Não foi possível excluir a pergunta. Reabra a candidatura e tente novamente."
+    },
     "manage": "Gerenciar",
     "manageDialog": {
       "title": "Gerenciar colunas",

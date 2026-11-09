@@ -20,7 +20,101 @@ import { Alert } from '@/components/ui/alert';
 import { StatusIndicator } from '@/components/ui/status-indicator';
 import { useTranslations } from '@/lib/i18n';
 import { formatDate } from '@/lib/format-date';
-import { getApplicationDetail, updateApplication, type ApplicationDetail } from '@/lib/api/tracker';
+import {
+  addInterviewQuestion,
+  removeInterviewQuestion,
+  getApplicationDetail,
+  updateApplication,
+  type ApplicationDetail,
+} from '@/lib/api/tracker';
+
+function InterviewQuestionForm({
+  detail,
+  onUpdated,
+}: {
+  detail: ApplicationDetail;
+  onUpdated: () => void;
+}) {
+  const { t } = useTranslations();
+  const [questions, setQuestions] = useState(detail.interview_questions ?? []);
+  const [draft, setDraft] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = async () => {
+    const question = draft.trim();
+    if (!question || saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const updated = await addInterviewQuestion(detail.application_id, question);
+      setQuestions(updated.interview_questions ?? []);
+      setDraft('');
+      onUpdated();
+    } catch {
+      setError(t('tracker.questions.saveFailed'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const remove = async (index: number) => {
+    if (saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const updated = await removeInterviewQuestion(detail.application_id, index, questions);
+      setQuestions(updated.interview_questions ?? []);
+      onUpdated();
+    } catch {
+      setError(t('tracker.questions.deleteFailed'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="interview-question">{t('tracker.questions.title')}</Label>
+      <ol className="list-decimal space-y-1 pl-6 text-sm">
+        {questions.map((question, index) => (
+          <li key={index} className="whitespace-pre-wrap break-words">
+            <span>{question}</span>{' '}
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={saving}
+              onClick={() => remove(index)}
+            >
+              {t('common.delete')} #{index + 1}
+            </Button>
+          </li>
+        ))}
+      </ol>
+      <Textarea
+        id="interview-question"
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        rows={3}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') event.stopPropagation();
+        }}
+        disabled={saving}
+      />
+      {error && <Alert tone="error">{error}</Alert>}
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        onClick={save}
+        disabled={saving || !draft.trim()}
+      >
+        {t(saving ? 'common.saving' : 'tracker.questions.add')}
+      </Button>
+    </div>
+  );
+}
 
 interface CardDetailModalProps {
   applicationId: string | null;
@@ -219,6 +313,14 @@ export function CardDetailModal({
                   </Button>
                 </div>
               </div>
+
+              {open && detail.application_id === applicationId && (
+                <InterviewQuestionForm
+                  key={detail.application_id}
+                  detail={detail}
+                  onUpdated={onUpdated}
+                />
+              )}
 
               {!resumeAvailable && (
                 <Alert tone="warning">{t('tracker.modal.resumeUnavailable')}</Alert>

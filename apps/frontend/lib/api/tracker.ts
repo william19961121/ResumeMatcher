@@ -31,6 +31,7 @@ export interface Application {
   applied_at: string | null;
   interview_at: string | null;
   notes: string | null;
+  interview_questions?: string[];
   position: number;
   created_at: string;
   updated_at: string;
@@ -123,6 +124,29 @@ export async function createApplication(payload: ManualApplicationCreate): Promi
 export async function getApplicationDetail(id: string): Promise<ApplicationDetail> {
   const res = await apiFetch(`/applications/${id}`, { credentials: 'include' });
   return asJson<ApplicationDetail>(res, 'Failed to load application');
+}
+
+export async function addInterviewQuestion(id: string, question: string): Promise<Application> {
+  const res = await apiPost(`/applications/${encodeURIComponent(id)}/interview-questions`, {
+    question,
+  });
+  return asJson<Application>(res, 'Failed to add interview question');
+}
+
+export async function removeInterviewQuestion(
+  id: string,
+  index: number,
+  expectedQuestions: string[]
+): Promise<Application> {
+  const res = await apiFetch(
+    `/applications/${encodeURIComponent(id)}/interview-questions/${index}`,
+    {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expected_questions: expectedQuestions }),
+    }
+  );
+  return asJson<Application>(res, 'Failed to remove interview question');
 }
 
 // Update one card (status/position/notes/company/role/applied_at).

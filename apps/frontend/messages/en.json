@@ -1425,6 +1425,13 @@
     }
   },
   "tracker": {
+    "questions": {
+      "title": "Interview questions",
+      "add": "Add question",
+      "empty": "No interview questions recorded yet.",
+      "saveFailed": "Could not save the question. Try again.",
+      "deleteFailed": "Could not delete the question. Reopen the application and try again."
+    },
     "manage": "Manage",
     "manageDialog": {
       "title": "Manage Columns",

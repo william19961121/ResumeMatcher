@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { TRACKER_HIDDEN_STATUSES_KEY } from '@/lib/utils/tracker-column-visibility';
 import { KanbanBoard } from '@/components/tracker/kanban-board';
 import {
   APPLICATION_STATUS_ORDER,
@@ -53,6 +54,7 @@ describe('KanbanBoard header', () => {
   });
 
   afterEach(() => {
+    localStorage.removeItem(TRACKER_HIDDEN_STATUSES_KEY);
     vi.restoreAllMocks();
   });
 
@@ -104,6 +106,27 @@ describe('KanbanBoard header', () => {
     expect(add).toHaveClass('h-8');
     // Actions stay right-aligned when they wrap onto their own row.
     expect(add.parentElement).toHaveClass('ml-auto');
+  });
+
+  it('shows questions and their company even when the owning column is hidden', async () => {
+    localStorage.setItem(TRACKER_HIDDEN_STATUSES_KEY, JSON.stringify(['saved']));
+    const card = {
+      application_id: 'a1',
+      company: 'Acme',
+      role: 'Engineer',
+      interview_questions: ['Explain indexes.'],
+    } as Application;
+    vi.mocked(listApplications).mockResolvedValue({ columns: columnsWith([card]) });
+
+    render(<KanbanBoard />);
+    await screen.findByRole('heading', { name: 'tracker.columns.applied' });
+    expect(screen.queryByRole('heading', { name: 'tracker.columns.saved' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'tracker.questions.title' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'tracker.questions.title' });
+    expect(within(dialog).getByRole('heading', { name: 'Acme' })).toBeVisible();
+    expect(within(dialog).getByText('Engineer')).toBeVisible();
+    expect(within(dialog).getByText('Explain indexes.')).toBeVisible();
   });
 
   it('keeps the scroll controls at the compact h-8 size', async () => {

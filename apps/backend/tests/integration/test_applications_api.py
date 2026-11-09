@@ -1,5 +1,6 @@
 """Integration tests for the Kanban application-tracker API (real isolated DB)."""
 
+import asyncio
 from unittest.mock import AsyncMock, patch
 
 from httpx import ASGITransport, AsyncClient
@@ -284,3 +285,74 @@ class TestRobustnessFixes:
         assert resp.status_code == 500
         stats = await isolated_db.get_stats()
         assert stats["total_jobs"] == 0  # no orphan job left behind
+
+
+async def test_interview_questions_append_and_survive_card_updates(
+    isolated_db: Database,
+) -> None:
+    card = await _seed_card(isolated_db, company="Acme", role="Engineer")
+    other = await _seed_card(isolated_db, job_id="job-2")
+    url = f"/api/v1/applications/{card['application_id']}"
+    async with _client() as client:
+        assert (await client.get(url)).json()["interview_questions"] == []
+        endpoint = f"{url}/interview-questions"
+        assert (await client.post(endpoint, json={"question": "  "})).status_code == 422
+        missing = await client.post(
+            "/api/v1/applications/missing/interview-questions",
+            json={"question": "Example"},
+        )
+        assert missing.status_code == 404
+        first, second = await asyncio.gather(
+            client.post(endpoint, json={"question": "  Explain indexes.  "}),
+            client.post(endpoint, json={"question": "Explain transactions."}),
+        )
+        assert first.status_code == second.status_code == 200
+        moved = await client.patch(
+            url, json={"status": "interview", "notes": "Follow up"}
+        )
+        assert moved.status_code == 200
+        listed = (await client.get("/api/v1/applications")).json()["columns"]
+    record = listed["interview"][0]
+    assert record["company"] == "Acme"
+    assert record["role"] == "Engineer"
+    assert record["notes"] == "Follow up"
+    assert sorted(record["interview_questions"]) == [
+        "Explain indexes.",
+        "Explain transactions.",
+    ]
+    assert listed["applied"][0]["application_id"] == other["application_id"]
+    assert listed["applied"][0]["interview_questions"] == []
+
+
+async def test_delete_question_preserves_interview_time_and_other_questions(
+    isolated_db: Database,
+) -> None:
+    card = await _seed_card(isolated_db, status="interview")
+    url = f"/api/v1/applications/{card['application_id']}"
+    interview_at = "2027-01-02T09:30:00Z"
+    async with _client() as client:
+        assert (
+            await client.patch(url, json={"interview_at": interview_at})
+        ).status_code == 200
+        questions = ["First question", "First question", "Second question"]
+        for question in questions:
+            response = await client.post(
+                f"{url}/interview-questions", json={"question": question}
+            )
+            assert response.status_code == 200
+        endpoint = f"{url}/interview-questions/0"
+        stale = await client.request(
+            "DELETE", endpoint, json={"expected_questions": ["Second question"]}
+        )
+        assert stale.status_code == 409
+        removed = await client.request(
+            "DELETE", endpoint, json={"expected_questions": questions}
+        )
+        assert removed.status_code == 200
+        retried = await client.request(
+            "DELETE", endpoint, json={"expected_questions": questions}
+        )
+        assert retried.status_code == 409
+        stored = (await client.get(url)).json()
+        assert stored["interview_questions"] == ["First question", "Second question"]
+        assert stored["interview_at"] == interview_at

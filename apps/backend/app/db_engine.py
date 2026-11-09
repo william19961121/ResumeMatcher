@@ -124,6 +124,7 @@ def _init_postgres(engine: Engine, schema: str | None) -> None:
         _add_missing_column(conn, Improvement.__table__.c.forced_keywords, schema)
         _add_missing_column(conn, Resume.__table__.c.template_settings, schema)
         _add_missing_column(conn, Application.__table__.c.interview_at, schema)
+        _add_missing_column(conn, Application.__table__.c.interview_questions, schema)
 
 
 def init_models_sync(engine: Engine, schema: str | None = None) -> None:
@@ -167,6 +168,7 @@ def init_models_sync(engine: Engine, schema: str | None = None) -> None:
         _add_missing_column(conn, Improvement.__table__.c.forced_keywords)
         _add_missing_column(conn, Resume.__table__.c.template_settings)
         _add_missing_column(conn, Application.__table__.c.interview_at)
+        _add_missing_column(conn, Application.__table__.c.interview_questions)
 
         preview_columns = (
             conn.exec_driver_sql("PRAGMA table_info(tailoring_previews)")

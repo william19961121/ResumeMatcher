@@ -298,6 +298,7 @@ class Database:
             "applied_at": row.applied_at,
             "interview_at": row.interview_at,
             "notes": row.notes,
+            "interview_questions": row.interview_questions or [],
             "position": row.position,
             "created_at": row.created_at,
             "updated_at": row.updated_at,
@@ -1389,6 +1390,33 @@ class Database:
                 for index, item in enumerate(ordered):
                     item.position = index
 
+            row.updated_at = _now()
+            await session.commit()
+            return self._application_to_dict(row)
+
+    async def add_interview_question(
+        self, application_id: str, question: str
+    ) -> dict[str, Any] | None:
+        async with self._write_session() as session:
+            row = await session.get(Application, application_id)
+            if row is None:
+                return None
+            row.interview_questions = [*(row.interview_questions or []), question]
+            row.updated_at = _now()
+            await session.commit()
+            return self._application_to_dict(row)
+
+    async def remove_interview_question(
+        self, application_id: str, index: int, expected_questions: list[str]
+    ) -> dict[str, Any] | None:
+        async with self._write_session() as session:
+            row = await session.get(Application, application_id)
+            if row is None:
+                return None
+            questions = row.interview_questions or []
+            if questions != expected_questions or not 0 <= index < len(questions):
+                raise ValueError("Interview question has changed")
+            row.interview_questions = questions[:index] + questions[index + 1 :]
             row.updated_at = _now()
             await session.commit()
             return self._application_to_dict(row)
